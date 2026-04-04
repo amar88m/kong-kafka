@@ -1,5 +1,1 @@
 # kong-kafka
-
-
-
-test
