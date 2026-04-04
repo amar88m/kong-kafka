@@ -1,0 +1,297 @@
+# Default values for sample-app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: europe-docker.pkg.dev/ssv-rtl-devops-registry-624/docker-release/cmap/port3/svc-account-balance-service:<+pipeline.stages.Container_Image_Build.spec.execution.steps.Additional_Registry_Push.spec.envVariables.IMAGE_TAG>
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: "svc-account-balance-service"
+fullnameOverride: "svc-account-balance-service"
+
+istioNetworking: # Enable/Disable Istio components
+  enabled: true
+
+serviceAccount:
+  create: true
+  svc: pre-gsa-gke-account-balan3c983
+  projectId: wrk-pre-wrk01-svp-63d0c6
+  automountServiceAccountToken: false
+
+podAnnotations: {}
+podLabels:
+  codeclassification: confidential
+  engineeringlead: 'Garry.Todd'
+  lastreviewdate: 05Oct2025
+  IBS_service: false
+  environment: pre-prod
+  cost_center: 455122
+  cmdb_appid: al27117
+  application: PORT
+
+# traffic.sidecar.istio.io/excludeOutboundIPRanges: 10.178.0.0/16
+
+podSecurityContext:
+  fsGroup: 1
+  runAsNonRoot: true
+  runAsUser: 10002
+  seccompProfile:
+    type: RuntimeDefault
+  supplementalGroups:
+    - 1337
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 10002
+  runAsGroup: 10002
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  port: 8080
+
+container:
+  port: 8080
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+# Additional volumes on the output Deployment definition.
+volumes:
+  - emptyDir: {}
+    name: tmp
+  - configMap:
+      defaultMode: 420
+      items:
+        - key: va.hcl
+          path: va.hcl
+      name: svc-account-balance-service-cm-vault
+    name: config
+  - emptyDir: {}
+    name: shared-data
+  - name: hcv-root
+    secret:
+      secretName: ca-bundle-istio-rev #TODO
+
+## Additional volumeMounts on the output Deployment definition.
+volumeMounts:
+  - mountPath: /tmp
+    name: tmp
+  - mountPath: /etc/vault
+    name: config
+  - mountPath: /vault
+    name: shared-data
+  - name: hcv-root
+    mountPath: /etc/cabundle/vault
+
+probes:
+  startupProbe:
+    tcpSocket:
+      port: 8080
+    periodSeconds: 2
+    successThreshold: 1
+    failureThreshold: 90
+    timeoutSeconds: 5
+  livenessProbe:
+    tcpSocket:
+      port: 8080
+    periodSeconds: 30
+    successThreshold: 1
+    failureThreshold: 3
+    timeoutSeconds: 1
+  readinessProbe:
+    tcpSocket:
+      port: 8080
+    periodSeconds: 30
+      successThreshold: 1
+      failureThreshold: 3
+      timeoutSeconds: 1
+
+tolerations:
+  key: "user-int"
+
+nodeSelector:
+  node_pool: "ew2-msv-pre-caas01-svp01-knp01-int"
+
+affinity: {}
+
+virtualservice:
+  gateway: caas-web-lbgcp-int-ingressgateway
+  hosts: web201-int-ew2.c2.test.lbgcp.cloud
+  prefix: /int/cmap/port3/accountbalanceserviced1/balance-enquiry #TODO
+
+authorizationPolicy:
+  methods:
+    - GET
+    - PUT
+    - POST
+
+safetronics:
+  enabled: true
+  port: 443
+  cidr:
+    - 10.172.189.146/32
+
+kafka:
+  enabled: true
+  port: 9092
+  cidr:
+    - 10.85.127.64/27
+    - 10.85.110.128/26
+
+kafkaschema:
+  enabled: true
+  port: 443
+  cidr:
+    - 10.85.127.64/27
+    - 10.85.110.128/26
+
+redis:
+  enabled: true
+  port: 6378
+  cidr:
+    - 10.178.37.160/28
+
+extraEnvVars:
+  - name: PROJECT_ID
+    value: wrk-pre-wrk01-svp-63d0c6
+  - name: INSTANCE_ID
+    value: eu5-pre-wrk01-spi-d93ea
+  - name: DATABASE
+    value: port-int-db
+  - name: SPRING_APP_NAME
+    value: AL27117-account-balance-service
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    #value: kafka.euwest2.cata.sbs-pre.oncp.group:9092
+    value: kafka.cata.sbs-int.oncp.group:9092
+  - name: KAFKA_CATB_BOOTSTRAP_SERVERS
+    #value: kafka.euwest2.cata.sbs-pre.oncp.group:9092
+    value: kafka.sbs-int.oncp.group:9092
+  - name: KAFKA_SCHEMA_REGISTRY_URL
+    value: https://schemaregistry.cata.sbs-int.oncp.group
+  - name: KAFKA_SECURITY_PROTOCOL
+    value: SSL
+  - name: KAFKA_CONSUMER_GROUP_ID
+    value: AL27117-svc-account-balance-service
+  - name: KAFKA_ACS_CONSUMER_GROUP_ID
+    value: AL27117-svc-acs-account-balance-service
+  - name: KAFKA_AUTO_OFFSET_RESET
+    value: latest
+  - name: KAFKA_TRUSTSTORE_TYPE
+    value: PEM
+  - name: KAFKA_KEYSTORE_TYPE
+    value: PEM
+  - name: PRODUCER_RETRY
+    value: 3
+  - name: PRODUCER_RETRY_BACKOFF_MS
+    value: 120000
+  - name: PRODUCER_REQUEST_REQUIRED_ACKS
+    value: all
+  - name: PRODUCER_REQUEST_TIMEOUT_MS
+    value: 30000
+  - name: PRODUCER_MAX_BLOCK_MS
+    value: 60000
+  - name: KAFKA_KEYSTORE_LOCATION
+    value: /vault/certs/port-fullchain.pem
+  - name: KAFKA_TRUSTSTORE_LOCATION
+    value: /vault/certs/port-cacerts.pem
+  - name: KAFKA_CATB_KEYSTORE_LOCATION
+    value: /vault/certs/port-catb-fullchain.pem
+  - name: KAFKA_CATB_TRUSTSTORE_LOCATION
+    value: /vault/certs/port-catb-cacerts.pem
+  - name: REDIS_TRUSTSTORE_LOCATION
+    value: /vault/certs/port-redis.pem
+  - name: REDIS_PWD
+    value: changeit
+  - name: KAFKA_KEY_SERIALIZER
+    value: org.apache.kafka.common.serialization.StringSerializer
+  - name: KAFKA_VALUE_SERIALIZER
+    value: io.confluent.kafka.serializers.KafkaAvroSerializer
+  - name: KAFKA_STREAMS_ACSREQ_APP_ID
+    value: AL27117-svc-acs-account-balance-request-service
+  - name: KAFKA_KEY_DESERIALIZER
+    value: org.apache.kafka.common.serialization.StringDeserializer
+  - name: KAFKA_VALUE_DESERIALIZER
+    value: io.confluent.kafka.serializers.KafkaAvroDeserializer
+  - name: REQUEST_TOPIC
+    value: AL27117-BTB-PPP-SIT1-FUNDS-CHECK-ACCOUNT-BALANCE-V1
+  - name: RESPONSE_TOPIC
+    value: AL27117-BTB-PPP-SIT1-FUNDS-CHECK-DECISION-ACCOUNT-BALANCE-V1
+  - name: ACS_REQUEST_TOPIC
+    value: AL27117-BTB-ACS-SIT1-FUNDS-CHECK-ACS-ACCOUNT-BALANCE-REQUEST-V1
+  - name: ACS_RESPONSE_TOPIC
+    value: ACS-SIT2-ENQUIRY-RESPONSE-PORT
+  - name: TECH_ERROR
+    value: AL27117-BTB-PPP-SIT1-FUNDS-CHECK-REQUEST-ACS-ACCOUNT-BALANCE-TECH-ERROR-V1
+  - name: KAFKA_STREAMS_APP_ID #TODO
+    value: AL27117-svc-account-balance-service
+  - name: KAFKA_STREAMS_ACS_APP_ID #TODO
+    value: AL27117-svc-acs-account-balance-service
+  - name: KAFKA_STREAMS_PROCESSING_GUARANTEE
+    value: at_least_once
+  - name: KAFKA_STREAMS_THREADS
+    value: "3"
+  - name: KAFKA_AUTO_CREATE_TOPICS
+    value: "false"
+  - name: KAFKA_SASL_MECHANISM
+    value: PLAIN
+  - name: KAFKA_SASL_JAAS_CONFIG
+    value: org.apache.kafka.common.security.plain.PlainLoginModule required username="user" password="pass";
+  - name: LOGGING_LEVEL_KAFKA_COMMON_SECURITY
+    value: DEBUG
+  - name: LOGGING_LEVEL_KAFKA_PRODUCER_INTERNALS
+    value: DEBUG
+  - name: DELIVERY_TIMEOUT_MS
+    value: "60000"
+  - name: RETRY_BACKOFF_MS
+    value: "4000"
+  - name: MAX_FLIGHT_REQ_PER_CONNECTION
+    value: "1"
+  - name: GCP_ENV
+    value: int
+  - name: TZ
+    value: "Europe/London"
+  - name: REDIS_HOST
+    value: 10.178.37.165
+  - name: REDIS_PORT
+    value: 6378
+  - name: REDIS_AUTH
+    value: 4f7d22cd-47bb-411a-88b1-d5d4cfd05671
+deploymentEnv: INT
+namespace: ns-29caa5-int
+
+vault:
+  enabled: true
+  namespace: "gcp/int/port_AL27117"
+  authPath: "auth/kubernetes/gcp-int/ew2-msv-pre-caas01-svp01-gke01"
+  role: "svc-account-balance-service-int-role"
+  cidr: 10.85.16.144/29
+  url: https://vault-gcp-nprd.mgmt-prd.oncp.io:8200/
+  mountPath: auth/kubernetes/gcp-int/ew2-msv-pre-caas01-svp01-gke01
+  open: "{{"
+  openwithdash: "{{-"
+  closed: "}}"
+  environment: int
+  securityUtilityPath: /wlp/bin/securityUtility
+  certs:
+    - certFolderName: port/int/svc-account-balance/secrets
+      certs:
+        - cacerts.pem
+        - fullchain.pem
+        - catb-cacerts.pem
+        - catb-fullchain.pem
+        - redis.pem
+  secrets:
+    - secretFolderName: port/int/svc-account-balance/secrets

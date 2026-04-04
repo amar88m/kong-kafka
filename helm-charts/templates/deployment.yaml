@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.fullnameOverride }}
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+  labels:
+    {{- include "sample-app1.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.fullnameOverride }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "sample-app1.labels" . | nindent 8 }}
+    {{- with .Values.podLabels }}
+    {{- toYaml . | nindent 8 }}
+    {{- end }}
+    spec:
+      automountServiceAccountToken: true
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "sample-app1.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if (eq .Values.vault.enabled true) }}
+      initContainers:
+        - command:
+            - /bin/sh
+            - -c
+            - vault agent -config=/etc/vault/va.hcl -log-level=trace
+          env:
+            - name: SKIP_CHOWN
+              value: "true"
+            - name: SKIP_SETCAP
+              value: "true"
+            - name: VAULT_ADDR
+              value: {{ .Values.vault.url }}
+            - name: VAULT_CACERT
+              value: /etc/cabundle/vault/ca.crt
+          image: europe-docker.pkg.dev/ssv-rtl-devops-registry-624/release/evkdfwnrmgvmlcbi/qstnpbzlcyxbfrqr/al16267/images/vault:v1.7.0
+          imagePullPolicy: IfNotPresent
+          name: vault-agent-auth
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+            requests:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /etc/vault
+              name: config
+            - name: shared-data
+              mountPath: /vault
+            - name: hcv-root
+              mountPath: /etc/cabundle/vault
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+            runAsGroup: 10002
+            runAsNonRoot: true
+            runAsUser: 1337
+      {{- end }}
+      tolerations:
+        - key: {{ .Values.tolerations.key }}
+          operator: "Equal"
+          value: "dedicated"
+          effect: "NoSchedule"
+      nodeSelector:
+        node_pool: {{ .Values.nodeSelector.node_pool }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            {{- if (.Values.commonEnvVars) }}
+  {{ toYaml .Values.commonEnvVars | indent 12 }}
+  {{- end }}
+  {{- if (.Values.extraEnvVars) }}
+  {{ toYaml .Values.extraEnvVars | indent 12 }}
+  {{- end }}
+ports:
+  - name: http
+    containerPort: {{ .Values.container.port }}
+    protocol: TCP
+resources:
+  {{- toYaml .Values.resources | nindent 12 }}
+    {{- if (.Values.probes.livenessEnabled) }}
+    {{- with .Values.probes.livenessProbe }}
+livenessProbe:
+  {{- toYaml . | nindent 12 }}
+    {{- end }}
+    {{- end }}
+    {{- if (.Values.probes.readinessEnabled) }}
+    {{- with .Values.probes.readinessProbe }}
+readinessProbe:
+  {{- toYaml . | nindent 12 }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.volumeMounts }}
+volumeMounts:
+  {{- toYaml . | nindent 12 }}
+    {{- end }}
+    {{- with .Values.volumes }}
+volumes:
+  {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+affinity:
+  {{- toYaml . | nindent 8 }}
+    {{- end }}

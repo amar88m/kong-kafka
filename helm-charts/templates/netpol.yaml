@@ -1,0 +1,82 @@
+# #Deny all traffic by default
+{{- if (eq .Values.vault.enabled true) }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-{{ .Values.fullnameOverride }}-egress-vault
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.fullnameOverride }}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: {{ .Values.vault.cidr }}
+      ports:
+        - protocol: TCP
+          port: 8200
+  {{- end }}
+---
+  {{- if hasKey .Values.vault "cidr2" }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-{{ .Values.fullnameOverride }}-egress-vault
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.fullnameOverride }}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: {{ .Values.vault.cidr2 }}
+      ports:
+        - protocol: TCP
+          port: 8200
+  {{- end }}
+---
+  {{- if (eq .Values.kafka.enabled true) }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-{{ .Values.fullnameOverride }}-egress-kafka
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.fullnameOverride }}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+      {{- range .Values.kafka.cidr }}
+      - ipBlock:
+          cidr: {{ . }}
+      {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.kafka.port }}
+  {{- end }}
+---
+  {{- if ne .Values.deploymentEnv "PROD" }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-{{ .Values.fullnameOverride }}-np
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.fullnameOverride }}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-gateway
+  {{- end }}
