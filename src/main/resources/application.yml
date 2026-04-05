@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  kafka:
+    bootstrap-servers: ${BOOTSTRAP_SERVERS:localhost:9092}
+
+app:
+  kafka:
+    prompt-topic: ${PROMPT_TOPIC:prompt_requests}
+    response-topic: ${RESPONSE_TOPIC:llm_raw_responses}
+    consumer-group: ${CONSUMER_GROUP:kafka-service-group}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
