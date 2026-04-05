@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.wipro.kong</groupId>
-    <artifactId>kong-kafka</artifactId>
+    <artifactId>svc-kong-kafka</artifactId>
     <version>0.0.1</version>
-    <name>kong-kafka</name>
+    <name>svc-kong-kafka</name>
     <description>PoC on KONG</description>
     <url/>
     <licenses>

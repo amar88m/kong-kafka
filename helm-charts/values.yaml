@@ -4,13 +4,13 @@
 
 replicaCount: 1
 
-image:
-  repository: europe-docker.pkg.dev/ssv-rtl-devops-registry-624/docker-release/cmap/port3/svc-account-balance-service:<+pipeline.stages.Container_Image_Build.spec.execution.steps.Additional_Registry_Push.spec.envVariables.IMAGE_TAG>
+iimage:
+  repository: europe-west2-docker.pkg.dev/lbg-coe/demo-repo/svc-kong-kafka:<IMAGE_TAG> #TODO
   pullPolicy: Always
 
 imagePullSecrets: []
-nameOverride: "svc-account-balance-service"
-fullnameOverride: "svc-account-balance-service"
+nameOverride: "svc-kong-kafka"
+fullnameOverride: "svc-kong-kafka"
 
 istioNetworking: # Enable/Disable Istio components
   enabled: true
@@ -68,34 +68,6 @@ resources:
     cpu: 500m
     memory: 1Gi
 
-# Additional volumes on the output Deployment definition.
-volumes:
-  - emptyDir: {}
-    name: tmp
-  - configMap:
-      defaultMode: 420
-      items:
-        - key: va.hcl
-          path: va.hcl
-      name: svc-account-balance-service-cm-vault
-    name: config
-  - emptyDir: {}
-    name: shared-data
-  - name: hcv-root
-    secret:
-      secretName: ca-bundle-istio-rev #TODO
-
-## Additional volumeMounts on the output Deployment definition.
-volumeMounts:
-  - mountPath: /tmp
-    name: tmp
-  - mountPath: /etc/vault
-    name: config
-  - mountPath: /vault
-    name: shared-data
-  - name: hcv-root
-    mountPath: /etc/cabundle/vault
-
 probes:
   startupProbe:
     tcpSocket:
@@ -138,31 +110,12 @@ authorizationPolicy:
     - PUT
     - POST
 
-safetronics:
-  enabled: true
-  port: 443
-  cidr:
-    - 10.172.189.146/32
-
 kafka:
   enabled: true
   port: 9092
   cidr:
     - 10.85.127.64/27
     - 10.85.110.128/26
-
-kafkaschema:
-  enabled: true
-  port: 443
-  cidr:
-    - 10.85.127.64/27
-    - 10.85.110.128/26
-
-redis:
-  enabled: true
-  port: 6378
-  cidr:
-    - 10.178.37.160/28
 
 extraEnvVars:
   - name: PROJECT_ID
@@ -179,8 +132,6 @@ extraEnvVars:
   - name: KAFKA_CATB_BOOTSTRAP_SERVERS
     #value: kafka.euwest2.cata.sbs-pre.oncp.group:9092
     value: kafka.sbs-int.oncp.group:9092
-  - name: KAFKA_SCHEMA_REGISTRY_URL
-    value: https://schemaregistry.cata.sbs-int.oncp.group
   - name: KAFKA_SECURITY_PROTOCOL
     value: SSL
   - name: KAFKA_CONSUMER_GROUP_ID
@@ -189,10 +140,6 @@ extraEnvVars:
     value: AL27117-svc-acs-account-balance-service
   - name: KAFKA_AUTO_OFFSET_RESET
     value: latest
-  - name: KAFKA_TRUSTSTORE_TYPE
-    value: PEM
-  - name: KAFKA_KEYSTORE_TYPE
-    value: PEM
   - name: PRODUCER_RETRY
     value: 3
   - name: PRODUCER_RETRY_BACKOFF_MS
@@ -203,18 +150,6 @@ extraEnvVars:
     value: 30000
   - name: PRODUCER_MAX_BLOCK_MS
     value: 60000
-  - name: KAFKA_KEYSTORE_LOCATION
-    value: /vault/certs/port-fullchain.pem
-  - name: KAFKA_TRUSTSTORE_LOCATION
-    value: /vault/certs/port-cacerts.pem
-  - name: KAFKA_CATB_KEYSTORE_LOCATION
-    value: /vault/certs/port-catb-fullchain.pem
-  - name: KAFKA_CATB_TRUSTSTORE_LOCATION
-    value: /vault/certs/port-catb-cacerts.pem
-  - name: REDIS_TRUSTSTORE_LOCATION
-    value: /vault/certs/port-redis.pem
-  - name: REDIS_PWD
-    value: changeit
   - name: KAFKA_KEY_SERIALIZER
     value: org.apache.kafka.common.serialization.StringSerializer
   - name: KAFKA_VALUE_SERIALIZER
@@ -271,27 +206,3 @@ extraEnvVars:
     value: 4f7d22cd-47bb-411a-88b1-d5d4cfd05671
 deploymentEnv: INT
 namespace: ns-29caa5-int
-
-vault:
-  enabled: true
-  namespace: "gcp/int/port_AL27117"
-  authPath: "auth/kubernetes/gcp-int/ew2-msv-pre-caas01-svp01-gke01"
-  role: "svc-account-balance-service-int-role"
-  cidr: 10.85.16.144/29
-  url: https://vault-gcp-nprd.mgmt-prd.oncp.io:8200/
-  mountPath: auth/kubernetes/gcp-int/ew2-msv-pre-caas01-svp01-gke01
-  open: "{{"
-  openwithdash: "{{-"
-  closed: "}}"
-  environment: int
-  securityUtilityPath: /wlp/bin/securityUtility
-  certs:
-    - certFolderName: port/int/svc-account-balance/secrets
-      certs:
-        - cacerts.pem
-        - fullchain.pem
-        - catb-cacerts.pem
-        - catb-fullchain.pem
-        - redis.pem
-  secrets:
-    - secretFolderName: port/int/svc-account-balance/secrets
