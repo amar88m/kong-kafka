@@ -1,4 +1,4 @@
-package com.example.kafkasvc.controller;
+package com.wipro.kong.kong.kafkasvc.controller;
 
 import com.example.kafkasvc.model.PromptEvent;
 import com.example.kafkasvc.service.PromptProducerService;

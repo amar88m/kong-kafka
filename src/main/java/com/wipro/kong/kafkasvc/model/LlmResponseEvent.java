@@ -1,4 +1,4 @@
-package com.example.kafkasvc.model;
+package com.wipro.kong.kong.kafkasvc.model;
 
 import java.time.Instant;
 

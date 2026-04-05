@@ -1,4 +1,4 @@
-package com.example.kafkasvc.service;
+package com.wipro.kong.kong.kafkasvc.service;
 
 import com.example.kafkasvc.model.LlmResponseEvent;
 import org.slf4j.Logger;

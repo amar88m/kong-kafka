@@ -1,4 +1,4 @@
-package com.example.kafkasvc.config;
+package com.wipro.kong.kong.kafkasvc.config;
 
 import com.example.kafkasvc.model.LlmResponseEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

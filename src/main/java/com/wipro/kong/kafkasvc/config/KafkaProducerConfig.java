@@ -1,4 +1,4 @@
-package com.example.kafkasvc.config;
+package com.wipro.kong.kong.kafkasvc.config;
 
 import com.example.kafkasvc.model.PromptEvent;
 import org.apache.kafka.clients.producer.ProducerConfig;
