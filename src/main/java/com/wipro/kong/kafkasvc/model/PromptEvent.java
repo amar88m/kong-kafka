@@ -1,59 +1,31 @@
-package com.wipro.kong.kong.kafkasvc.model;
-
-import jakarta.validation.constraints.NotBlank;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
+package com.wipro.kong.kafka.model;
 
 public class PromptEvent {
 
-    private String requestId = UUID.randomUUID().toString();
+    private String promptId;
+    private String promptText;
 
-    @NotBlank
-    private String prompt;
-
-    private String sourceAgent;
-    private Instant timestamp = Instant.now();
-    private List<String> expectedModels;
-
-    public String getRequestId() {
-        return requestId;
+    public PromptEvent() {
     }
 
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
+    public PromptEvent(String promptId, String promptText) {
+        this.promptId = promptId;
+        this.promptText = promptText;
     }
 
-    public String getPrompt() {
-        return prompt;
+    public String getPromptId() {
+        return promptId;
     }
 
-    public void setPrompt(String prompt) {
-        this.prompt = prompt;
+    public void setPromptId(String promptId) {
+        this.promptId = promptId;
     }
 
-    public String getSourceAgent() {
-        return sourceAgent;
+    public String getPromptText() {
+        return promptText;
     }
 
-    public void setSourceAgent(String sourceAgent) {
-        this.sourceAgent = sourceAgent;
-    }
-
-    public Instant getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Instant timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public List<String> getExpectedModels() {
-        return expectedModels;
-    }
-
-    public void setExpectedModels(List<String> expectedModels) {
-        this.expectedModels = expectedModels;
+    public void setPromptText(String promptText) {
+        this.promptText = promptText;
     }
 }
