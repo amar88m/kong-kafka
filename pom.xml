@@ -64,7 +64,6 @@
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-
             <scope>test</scope>
         </dependency>
 
@@ -169,7 +168,8 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
+
+        <!--<dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-schema-registry-client</artifactId>
             <version>7.8.0</version>
@@ -179,7 +179,7 @@
                     <artifactId>guava</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -198,11 +198,11 @@
             <version>7.6.0</version>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-schema-serializer</artifactId>
             <version>7.8.0</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>org.apache.avro</groupId>

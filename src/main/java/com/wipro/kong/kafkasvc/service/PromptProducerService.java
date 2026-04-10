@@ -1,6 +1,6 @@
-package com.wipro.kong.kong.kafkasvc.service;
+package com.wipro.kong.kafkasvc.service;
 
-import com.example.kafkasvc.model.PromptEvent;
+import com.wipro.kong.kafkasvc.model.PromptEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class PromptProducerService {
 
-    private static final Logger log = LoggerFactory.getLogger(PromptProducerService.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(PromptProducerService.class);
 
     private final KafkaTemplate<String, PromptEvent> kafkaTemplate;
 
@@ -22,16 +23,23 @@ public class PromptProducerService {
     }
 
     public void publishPrompt(PromptEvent event) {
+
         kafkaTemplate.send(promptTopic, event.getRequestId(), event)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
-                        log.error("Failed to publish prompt for requestId={}", event.getRequestId(), ex);
+                        log.error(
+                                "Failed to publish prompt | requestId={}",
+                                event.getRequestId(),
+                                ex
+                        );
                     } else {
-                        log.info("Published prompt requestId={} topic={} partition={} offset={}",
+                        log.info(
+                                "Published prompt | requestId={} | topic={} | partition={} | offset={}",
                                 event.getRequestId(),
                                 result.getRecordMetadata().topic(),
                                 result.getRecordMetadata().partition(),
-                                result.getRecordMetadata().offset());
+                                result.getRecordMetadata().offset()
+                        );
                     }
                 });
     }

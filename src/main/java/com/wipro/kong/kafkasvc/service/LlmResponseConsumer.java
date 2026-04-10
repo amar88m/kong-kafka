@@ -1,6 +1,6 @@
-package com.wipro.kong.kong.kafkasvc.service;
+package com.wipro.kong.kafkasvc.service;
 
-import com.example.kafkasvc.model.LlmResponseEvent;
+import com.wipro.kong.kafkasvc.model.LlmResponseEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -10,29 +10,45 @@ import org.springframework.stereotype.Service;
 @Service
 public class LlmResponseConsumer {
 
-    private static final Logger log = LoggerFactory.getLogger(LlmResponseConsumer.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(LlmResponseConsumer.class);
 
     @KafkaListener(
             topics = "${app.kafka.response-topic}",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void consume(LlmResponseEvent event, Acknowledgment acknowledgment) {
+    public void consume(
+            LlmResponseEvent event,
+            Acknowledgment acknowledgment
+    ) {
+
         try {
-            log.info("Consumed response requestId={} model={} status={}",
+            log.info(
+                    "Consumed response | requestId={} | model={} | status={}",
                     event.getRequestId(),
                     event.getModelName(),
-                    event.getStatus());
+                    event.getStatus()
+            );
 
-// TODO:
-            // 1. Save response to DB
+            // TODO:
+            // 1. Persist response
             // 2. Aggregate by requestId
-            // 3. Send grouped responses to Pegasus
+            // 3. Send downstream event
             // 4. Update request status
 
             acknowledgment.acknowledge();
-        } catch (Exception e) {
-            log.error("Error while processing requestId={}", event.getRequestId(), e);
-            throw e;
+
+        } catch (Exception ex) {
+
+            log.error(
+                    "Failed processing response | requestId={}",
+                    event != null ? event.getRequestId() : "unknown",
+                    ex
+            );
+
+            // rethrow → Kafka retry / DLQ later
+            throw ex;
         }
     }
 }
+``
