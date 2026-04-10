@@ -1,0 +1,44 @@
+replicaCount: 1
+
+image:
+  repository: europe-west2-docker.pkg.dev/<project>/<repo>/svc-kong-kafka
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8080
+
+container:
+  port: 8080
+
+kafka:
+  enabled: true
+  port: 9092
+
+extraEnvVars:
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    value: kafka.kafka.svc.cluster.local:9092 #Internal DNS name automatically created by Kubernetes for the Kafka Service that we deploy on GKE
+
+  - name: KAFKA_SECURITY_PROTOCOL
+    value: PLAINTEXT
+
+  - name: KAFKA_CONSUMER_GROUP_ID
+    value: svc-kong-kafka-group
+
+  - name: KAFKA_AUTO_OFFSET_RESET
+    value: earliest
+
+  - name: KAFKA_KEY_SERIALIZER
+    value: org.apache.kafka.common.serialization.StringSerializer
+
+  - name: KAFKA_VALUE_SERIALIZER
+    value: org.apache.kafka.common.serialization.StringSerializer
+
+  - name: KAFKA_KEY_DESERIALIZER
+    value: org.apache.kafka.common.serialization.StringDeserializer
+
+  - name: KAFKA_VALUE_DESERIALIZER
+    value: org.apache.kafka.common.serialization.StringDeserializer
+
+  - name: REQUEST_TOPIC
+    value: test-topic
